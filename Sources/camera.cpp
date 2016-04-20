@@ -87,8 +87,6 @@ namespace ComS342 {
         float horizMouseMovement = (mouseX - windowMidX) * yawSensitivity;
         float vertMouseMovement  = (mouseY - windowMidY) * pitchSensitivity;
 
-        std::cout << mouseX << " " << mouseY << std::endl;
-
         // Apply the mouse movement to our rotation vector. The vertical (look up and down
         // i.e. pitch) rotation is applied on the X axis, and the horizontal (look left and
         // i.e. yaw) rotation is applied on the Y Axis.
@@ -182,7 +180,7 @@ namespace ComS342 {
     }
 
     void Camera::update(double deltaTime) {
-        std::cout << deltaTime << std::endl;
+        this->move(deltaTime);
     }
 
 }

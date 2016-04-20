@@ -17,10 +17,9 @@
 //     #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
-namespace ComS342 {
-    // Define Some Constants
-    const int mWidth = 1280;
-    const int mHeight = 800;
-}
+// Define Some Constants
+const int mWidth = 1280;
+const int mHeight = 800;
+
 
 #endif //~ Glitter Header

@@ -1,6 +1,3 @@
-// Preprocessor Directives
-#define STB_IMAGE_IMPLEMENTATION
-
 // Local Headers
 #include "mesh.hpp"
 
@@ -14,10 +11,9 @@ namespace ComS342 {
         // Load a Model from File
         Assimp::Importer loader;
         aiScene const * scene = loader.ReadFile(
-            PROJECT_SOURCE_DIR "/Mirage/Models/" + filename,
+            PROJECT_SOURCE_DIR "/Glitter/Resources/Models/" + filename,
             aiProcessPreset_TargetRealtime_MaxQuality |
-            aiProcess_OptimizeGraph                   |
-            aiProcess_FlipUVs);
+            aiProcess_OptimizeGraph);
 
         // Walk the Tree of Scene Nodes
         auto index = filename.find_last_of("/");
@@ -25,13 +21,12 @@ namespace ComS342 {
         else parse(filename.substr(0, index), scene->mRootNode, scene);
     }
 
-    Mesh::Mesh(std::vector<Vertex> const & vertices, std::vector<GLuint> const & indices, std::map<GLuint, std::string> const & textures)
-        : mIndices(indices) ,mVertices(vertices), mTextures(textures) {
-        // Bind a Vertex Array Object
-        glGenVertexArrays(1, &mVertexArray);
+    Mesh::Mesh(std::vector<Vertex> const & vertices, std::vector<GLuint> const & indices, std::map<GLuint, std::string> const & textures) : mIndices(indices) ,mVertices(vertices), mTextures(textures) {
+        // Bind a Vertex Array Object (VAO)
+        glGenVertexArrays(1, & mVertexArray);
         glBindVertexArray(mVertexArray);
 
-        // Copy Vertex Buffer Data
+        // Copy Vertex Buffer Data (VBO)
         glGenBuffers(1, & mVertexBuffer);
         glBindBuffer(GL_ARRAY_BUFFER, mVertexBuffer);
         glBufferData(GL_ARRAY_BUFFER, mVertices.size() * sizeof(Vertex), &mVertices.front(), GL_STATIC_DRAW);
@@ -42,15 +37,19 @@ namespace ComS342 {
         glBufferData(GL_ELEMENT_ARRAY_BUFFER, mIndices.size() * sizeof(GLuint), &mIndices.front(), GL_STATIC_DRAW);
 
         // Set Shader Attributes
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*) offsetof(Vertex, position));
-        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*) offsetof(Vertex, normal));
-        glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*) offsetof(Vertex, uv));
         glEnableVertexAttribArray(0); // Vertex Positions
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*) offsetof(Vertex, position));
+        
         glEnableVertexAttribArray(1); // Vertex Normals
+        glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*) offsetof(Vertex, normal));
+        
         glEnableVertexAttribArray(2); // Vertex UVs
+        glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (GLvoid*) offsetof(Vertex, uv));
+
+        glBindBuffer(GL_ARRAY_BUFFER, 0); // Unbind VBO
 
         // Cleanup Buffers
-        glBindVertexArray(0);
+        glBindVertexArray(0); // Unbind VAO
         glDeleteBuffers(1, & mVertexBuffer);
         glDeleteBuffers(1, & mElementBuffer);
     }
@@ -59,8 +58,8 @@ namespace ComS342 {
         unsigned int unit = 0, diffuse = 0, specular = 0;
         
         for (auto &i : mSubMeshes) i->draw(shader);
-        
-        for (auto &i : mTextures) {
+        for (auto &i : mTextures)
+        {
             // Set Correct Uniform Names Using Texture Type (Omit ID for 0th Texture)
             std::string uniform = i.second;
                  if (i.second == "diffuse")  uniform += (diffuse++  > 0) ? std::to_string(diffuse)  : "";
@@ -70,10 +69,8 @@ namespace ComS342 {
             glActiveTexture(GL_TEXTURE0 + unit);
             glBindTexture(GL_TEXTURE_2D, i.first);
             glUniform1f(glGetUniformLocation(shader, uniform.c_str()), ++unit);
-        }
-        
-        glBindVertexArray(mVertexArray);
-        glDrawElements(GL_TRIANGLES, mIndices.size(), GL_UNSIGNED_INT, 0);
+        }   glBindVertexArray(mVertexArray);
+            glDrawElements(GL_TRIANGLES, mIndices.size(), GL_UNSIGNED_INT, 0);
     }
 
     void Mesh::parse(std::string const & path, aiNode const * node, aiScene const * scene) {
@@ -130,7 +127,7 @@ namespace ComS342 {
             // Load the Texture Image from File
             aiString str; material->GetTexture(type, i, & str);
             std::string filename = str.C_Str(); int width, height, channels;
-            filename = PROJECT_SOURCE_DIR "/Mirage/Models/" + path + "/" + filename;
+            filename = PROJECT_SOURCE_DIR "/Glitter/Resources/Models/" + path + "/" + filename;
             unsigned char * image = stbi_load(filename.c_str(), & width, & height, & channels, 0);
             
             if (!image) fprintf(stderr, "%s %s\n", "Failed to Load Texture", filename.c_str());

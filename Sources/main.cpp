@@ -14,6 +14,7 @@
 #include "grid.hpp"
 #include "utils.hpp"
 #include "physics.hpp"
+#include "keva.hpp"
 
 // System Headers
 #include <glad/glad.h>
@@ -63,11 +64,13 @@ mat4 modelMatrix;      // The model matrix maps an object's local coordinate sys
 // Pointers to two grids
 Grid *upperGrid, *lowerGrid;
 
+KEVAPlank *plank; // TODO: This will be a std::vector of planks
+
 // Camera. Params: location, rotation (degrees), window width & height
 Camera camera(vec3(0.0f), vec3(0.0f), windowWidth, windowHeight);
 
 // Create a physics world with gravity of 9.8 m/s^2 (default is 10.0)
-Physics physics(9.8);
+Physics physics(-0.8);
 
 // Callback function to resize the window and set the viewport to the correct size
 void resizeWindow(GLFWwindow *window, GLsizei newWidth, GLsizei newHeight) {
@@ -179,6 +182,7 @@ void drawFrame(double deltaTime) {
     mat4 mvpMatrix = projectionMatrix * viewMatrix * modelMatrix;
     upperGrid->draw(mvpMatrix);
     lowerGrid->draw(mvpMatrix);
+    plank->draw(viewMatrix, projectionMatrix);
 }
 
 int main() {
@@ -225,6 +229,10 @@ int main() {
     // Instantiate our grids. Params: Width, Depth, level (i.e. location of y-axis), number of grid lines
     upperGrid = new Grid(1000.0f, 1000.0f,  200.0f, 20);
     lowerGrid = new Grid(1000.0f, 1000.0f, -200.0f, 20);
+    
+    // ---------- Set up our KEVA plank ----------
+    plank = new KEVAPlank(btVector3(0,0,0), btQuaternion::getIdentity());
+    physics.addRigidBody(plank->getBody());
 
     // ---------- Set up our matricies ----------
 

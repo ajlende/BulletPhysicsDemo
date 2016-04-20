@@ -18,7 +18,7 @@
 
 // Pull in the ShaderProgram if required
 #ifndef SHADER_PROGRAM_HPP
-#include "shader_program.hpp"
+#include "shaderProgram.hpp"
 #endif /* SHADER_PROGRAM_HPP */
 
 namespace ComS342 {

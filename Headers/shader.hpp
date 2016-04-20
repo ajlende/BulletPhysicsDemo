@@ -1,89 +1,58 @@
-#ifndef _SHADER_HPP_
-#define _SHADER_HPP_
 #pragma once
 
-#include <string>
-#include <fstream>
-#include <sstream>
-#include <iostream>
-
+// System Headers
 #include <glad/glad.h>
+#include <glm/glm.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
-namespace ComS342 {
-    
-    class Shader {
+// Standard Headers
+#include <string>
+#include <vector>
+
+// Define Namespace
+namespace ComS342
+{
+    class Shader
+    {
     public:
-        GLuint Program;
 
-        Shader(const GLchar* vertexPath, const GLchar* fragmentPath) {
-            std::string vertexCode;
-            std::string fragmentCode;
-            std::ifstream vShaderFile;
-            std::ifstream fShaderFile;
+        // Implement Custom Constructor and Destructor
+         Shader() { mProgram = glCreateProgram(); }
+        ~Shader() { glDeleteProgram(mProgram); }
 
-            vShaderFile.exceptions (std::ifstream::badbit);
-            fShaderFile.exceptions (std::ifstream::badbit);
+        // Public Member Functions
+        Shader & activate();
+        Shader & attach(std::string const & filename);
+        GLuint   create(std::string const & filename);
+        GLuint   get() { return mProgram; }
+        Shader & link();
+        Shader & deactivate();
 
-            try {
-                vShaderFile.open(vertexPath);
-                fShaderFile.open(fragmentPath);
-                std::stringstream vShaderStream, fShaderStream;
-                vShaderStream << vShaderFile.rdbuf();
-                fShaderStream << fShaderFile.rdbuf();
-                vShaderFile.close();
-                fShaderFile.close();
-                vertexCode = vShaderStream.str();
-                fragmentCode = fShaderStream.str();
-            } catch (std::ifstream::failure e) {
-                std::cout << "ERROR::SHADER::FILE_NOT_SUCCESFULLY_READ" << std::endl;
-            }
-
-            const GLchar* vShaderCode = vertexCode.c_str();
-            const GLchar * fShaderCode = fragmentCode.c_str();
-
-            GLuint vertex, fragment;
-            GLint success;
-            GLchar infoLog[512];
-
-            // Vertex Shader
-            vertex = glCreateShader(GL_VERTEX_SHADER);
-            glShaderSource(vertex, 1, &vShaderCode, NULL);
-            glCompileShader(vertex);
-            glGetShaderiv(vertex, GL_COMPILE_STATUS, &success);
-            if (!success) {
-                glGetShaderInfoLog(vertex, 512, NULL, infoLog);
-                std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infoLog << std::endl;
-            }
-
-            // Fragment Shader
-            fragment = glCreateShader(GL_FRAGMENT_SHADER);
-            glShaderSource(fragment, 1, &fShaderCode, NULL);
-            glCompileShader(fragment);
-            glGetShaderiv(fragment, GL_COMPILE_STATUS, &success);
-            if (!success) {
-                glGetShaderInfoLog(fragment, 512, NULL, infoLog);
-                std::cout << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n" << infoLog << std::endl;
-            }
-
-            // Shader Program
-            this->Program = glCreateProgram();
-            glAttachShader(this->Program, vertex);
-            glAttachShader(this->Program, fragment);
-            glLinkProgram(this->Program);
-            glGetProgramiv(this->Program, GL_LINK_STATUS, &success);
-            if (!success) {
-                glGetProgramInfoLog(this->Program, 512, NULL, infoLog);
-                std::cout << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n" << infoLog << std::endl;
-            }
-
-            glDeleteShader(vertex);
-            glDeleteShader(fragment);
+        // Wrap Calls to glUniform
+        void bind(unsigned int location, float value);
+        void bind(unsigned int location, glm::mat4 const & matrix);
+        template<typename T> Shader & bind(std::string const & name, T&& value)
+        {
+            int location = glGetUniformLocation(mProgram, name.c_str());
+            if (location == -1) fprintf(stderr, "Missing Uniform: %s\n", name.c_str());
+            else bind(location, std::forward<T>(value));
+            return *this;
         }
 
-        void Use() {
-            glUseProgram(this->Program);
-        }
+    private:
+
+        // Disable Copying and Assignment
+        Shader(Shader const &) = delete;
+        Shader & operator=(Shader const &) = delete;
+
+        // Private Member Variables
+        GLuint mProgram;
+        GLint  mStatus;
+        GLint  mLength;
+        
+        bool initialized;
+        
+        std::vector<GLuint> shaders;
+
     };
-}
-
-#endif // _SHADER_HPP_
+};

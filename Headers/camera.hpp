@@ -12,6 +12,7 @@ using glm::vec3;
 
 namespace ComS342 {
     
+    
     // Class to act as a camera that can respond to mouse movements to look around and
     // keypresses to move forward/back/left/right relative to the direction we're facing.
     class Camera {

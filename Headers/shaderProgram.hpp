@@ -123,11 +123,11 @@ namespace ComS342 {
             glGetProgramiv(programId, GL_LINK_STATUS, &programLinkSuccess);
             if (programLinkSuccess == GL_TRUE) {
                 if (DEBUG) {
-                    cout << "Shader program link successful." << endl;
+                    cout << "ShaderProgram link successful." << endl;
                 }
             } else {
                 // Get the program info log, display it, and return false to indicate failure
-                cout << "Shader program link failed: " << getInfoLog(ObjectType::PROGRAM, programId) << endl;
+                cout << "ShaderProgram link failed: " << getInfoLog(ObjectType::PROGRAM, programId) << endl;
                 getKeypressThenExit();
             }
 
