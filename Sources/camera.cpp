@@ -13,7 +13,7 @@ namespace ComS342 {
         speed    = vec3(0.0f);
 
         // How fast we move (higher values mean we move and strafe faster)
-        movementSpeedFactor = 200.0f;
+        movementSpeedFactor = 50.0f;
 
         pitchSensitivity = 0.15f; // Mouse sensitivity when looking up and down
         yawSensitivity   = 0.15f; // Mouse sensitivity when looking left and right

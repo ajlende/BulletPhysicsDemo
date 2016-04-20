@@ -11,14 +11,14 @@
 
 #include <BulletCollision/CollisionShapes/btBoxShape.h>
 
-#include "physicsObject.hpp"
+#include "gameObject.hpp"
 #include "keva.hpp"
 
 namespace ComS342 {
-    class KEVAPlank : public PhysicsObject {
+    class KEVAPlank : public GameObject {
     public:
         KEVAPlank(const btVector3& position, const btQuaternion& orientation) :
-        PhysicsObject(new Mesh("keva-plank.dae"), new Shader(), 5, 1, position,
+        GameObject(new Mesh("keva-plank.dae"), new Shader(), 5, 1, position,
                       orientation, new btBoxShape(btVector3(0.25, 4.5, 0.75))) {
             (*this->shader).attach("Flat.vert")
             .attach("Flat.frag")
