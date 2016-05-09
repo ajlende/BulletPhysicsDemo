@@ -10,9 +10,14 @@
 #define PHYSICS_HPP
 #pragma once
 
+#include <glad/glad.h>
+
 #include <btBulletCollisionCommon.h>
 #include <btBulletDynamicsCommon.h>
 #include <BulletCollision/CollisionDispatch/btGhostObject.h>
+
+#include "debugDraw.hpp"
+#include "shader.hpp"
 
 #define BIT(x) (1<<(x))
 
@@ -34,6 +39,11 @@ namespace ComS342 {
         btConstraintSolver*       solver;
         btDynamicsWorld*          dynamicsWorld;
         
+        DebugDraw* debugDraw;
+        Shader* debugShader;
+        GLuint vao, vbo[2];
+        bool debug;
+        
         void init();
     
     public:
@@ -47,7 +57,12 @@ namespace ComS342 {
         void addRigidBody(btRigidBody* body);
         void addSoftBody(btSoftBodyFloatData* body);
         
-        // Inline functions
+        void toggleDebugWorld();
+        void drawLines(std::vector<DebugDraw::LINE> & lines, glm::mat4 const & viewMatrix, glm::mat4 const & projectionMatrix);
+        void debugDrawWorld() { this->dynamicsWorld->debugDrawWorld(); }
+        
+        bool isDebugWorldEnabled() { return debug; }
+        DebugDraw* getDebugDraw() { return debugDraw; }
         btDynamicsWorld* getWorld() { return dynamicsWorld; }
     };
     

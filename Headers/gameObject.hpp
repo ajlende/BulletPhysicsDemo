@@ -10,6 +10,15 @@
 #define RIGID_OBJECT_HPP
 #pragma once
 
+#include <glm/glm.hpp>
+
+#include <BulletDynamics/Dynamics/btRigidBody.h>
+#include <BulletCollision/CollisionShapes/btCollisionShape.h>
+#include <LinearMath/btMotionState.h>
+#include <LinearMath/btVector3.h>
+#include <LinearMath/btScalar.h>
+#include <LinearMath/btQuaternion.h>
+
 #include "mesh.hpp"
 #include "shader.hpp"
 
@@ -21,9 +30,9 @@ namespace ComS342 {
         Mesh*   mesh;
         Shader* shader;
         
+        // Bullet -> glm
         glm::vec3 position;
-        glm::vec3 axis;
-        float angle;
+        glm::quat orientation;
         float scale;
         
         // For Physics
@@ -31,19 +40,12 @@ namespace ComS342 {
         btMotionState*    motionState;
         btCollisionShape* shape;
         btScalar mass;
-        
-        void init();
 
     public:
         GameObject(Mesh* mesh, Shader* shader, btScalar mass, float scale, const btVector3& position, const btQuaternion& orientation, btCollisionShape* shape);
         ~GameObject();
-        
-        inline btRigidBody* getBody() {
-            return body;
-        }
-        
+        inline btRigidBody* getBody() { return body; }
         void draw(glm::mat4 const & viewMatrix, glm::mat4 const & projectionMatrix);
-        
     };
     
 }

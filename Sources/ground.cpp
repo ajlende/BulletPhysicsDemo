@@ -12,17 +12,17 @@
 
 #include "shader.hpp"
 #include "mesh.hpp"
-#include "keva.hpp"
+#include "ground.hpp"
 
 namespace ComS342 {
-    KEVAPlank::KEVAPlank(const btVector3 & position, const btQuaternion & orientation)
-    : GameObject(new Mesh("keva-plank.dae"),
+    Ground::Ground(const btVector3 & position, const btQuaternion & orientation)
+    : GameObject(new Mesh("ground.dae"),
                  new Shader(),
-                 5, // mass
-                 1, // scale
+                 0, // stationary
+                 2, // scale
                  position,
                  orientation,
-                 new btBoxShape(btVector3(0.25, 0.75, 4.5))) {
+                 new btBoxShape(btVector3(100.0, 0.4, 100.0))) {
         (*this->shader).attach("Flat.vert")
         .attach("Flat.frag")
         .link();

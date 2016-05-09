@@ -15,6 +15,8 @@
 #include "utils.hpp"
 #include "physics.hpp"
 #include "keva.hpp"
+#include "ball.hpp"
+#include "ground.hpp"
 
 // System Headers
 #include <glad/glad.h>
@@ -62,15 +64,39 @@ mat4 viewMatrix;       // The view matrix maps the world coordinate system into 
 mat4 modelMatrix;      // The model matrix maps an object's local coordinate system into world coordinates (i.e. model space to world space)
 
 // Pointers to two grids
-Grid *upperGrid, *lowerGrid;
-
-KEVAPlank *plank; // TODO: This will be a std::vector of planks
+// Grid *upperGrid, *lowerGrid;
 
 // Camera. Params: location, rotation (degrees), window width & height
 Camera camera(vec3(0.0f), vec3(0.0f), windowWidth, windowHeight);
 
-// Create a physics world with gravity of 9.8 m/s^2 (default is 10.0)
-Physics physics(-0.8);
+// Create a physics world with gravity of -9.8 m/s^2 (default is -10.0)
+Physics* physics;
+
+Ground* ground;
+std::vector<KEVAPlank*> planks;
+std::vector<Ball*> balls;
+
+void launchBall() {
+    auto loc = camera.getLocation();
+    viewMatrix = mat4(1.0f);
+    viewMatrix = glm::rotate(viewMatrix, camera.getXRotationRads(), X_AXIS);
+    viewMatrix = glm::rotate(viewMatrix, camera.getYRotationRads(), Y_AXIS);
+    glm::vec4 fwd4(0.0,0.0,-500.0,0.0);
+    glm::vec3 fwd3 = vec3(fwd4 * viewMatrix);
+    btVector3 fwd = btVector3(fwd3.x, fwd3.y, fwd3.z);
+    // auto pitch = camera.getXRotationRads();
+    // auto yaw = camera.getYRotationRads();
+    // auto roll = camera.getZRotationRads();
+    // auto quat = btQuaternion(yaw, pitch, roll);
+    // auto axis = quat.getAxis();
+    // auto angle = quat.getAngle();
+    // auto fwd = btVector3(0.0,0.0,-500.0).rotate(-axis, angle);
+    auto ball = new Ball(btVector3(loc.x,loc.y,loc.z), btQuaternion::getIdentity());
+    physics->addRigidBody(ball->getBody());
+    ball->getBody()->applyCentralImpulse(fwd);
+    ball->getBody()->applyTorqueImpulse(btVector3(5.0,5.0,10.0));
+    balls.push_back(ball);
+}
 
 // Callback function to resize the window and set the viewport to the correct size
 void resizeWindow(GLFWwindow *window, GLsizei newWidth, GLsizei newHeight) {
@@ -93,6 +119,8 @@ void handleKeypress(GLFWwindow* window, int key, int scancode, int action, int m
     // User hit ESC? Set the window to close
     if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
         glfwSetWindowShouldClose(window, GL_TRUE);
+    } else if (key == GLFW_KEY_SPACE && action == GLFW_PRESS) {
+        launchBall();
     } else {
         camera.handleKeypress(key, action);
     }
@@ -179,10 +207,20 @@ void drawFrame(double deltaTime) {
 
     // ---------- Drawing operations ----------
 
-    mat4 mvpMatrix = projectionMatrix * viewMatrix * modelMatrix;
-    upperGrid->draw(mvpMatrix);
-    lowerGrid->draw(mvpMatrix);
-    plank->draw(viewMatrix, projectionMatrix);
+    // mat4 mvpMatrix = projectionMatrix * viewMatrix * modelMatrix;
+    // upperGrid->draw(mvpMatrix);
+    // lowerGrid->draw(mvpMatrix);
+    
+    ground->draw(viewMatrix, projectionMatrix);
+    for (auto plank : planks)
+        plank->draw(viewMatrix, projectionMatrix);
+    for (auto ball : balls)
+        ball->draw(viewMatrix, projectionMatrix);
+    
+    if (physics->isDebugWorldEnabled()) {
+        physics->getWorld()->debugDrawWorld();
+        physics->drawLines(physics->getDebugDraw()->GetLines(), viewMatrix, projectionMatrix);
+    }
 }
 
 int main() {
@@ -223,16 +261,22 @@ int main() {
     // -------------- Set up our OpenGL settings ---------------
 
     initGL(window);
+    
+    // ---------- Set up physics ----------
+    physics = new Physics(-10);
 
-    // ---------- Set up our grids ----------
+    // ---------- Set up our scene ----------
 
     // Instantiate our grids. Params: Width, Depth, level (i.e. location of y-axis), number of grid lines
-    upperGrid = new Grid(1000.0f, 1000.0f,  200.0f, 20);
-    lowerGrid = new Grid(1000.0f, 1000.0f, -200.0f, 20);
+    // upperGrid = new Grid(1000.0f, 1000.0f,  200.0f, 20);
+    // lowerGrid = new Grid(1000.0f, 1000.0f, -200.0f, 20);
+    ground = new Ground(btVector3(0,-20,0), btQuaternion::getIdentity());
+    physics->addRigidBody(ground->getBody());
     
     // ---------- Set up our KEVA plank ----------
-    plank = new KEVAPlank(btVector3(0,0,0), btQuaternion::getIdentity());
-    physics.addRigidBody(plank->getBody());
+    auto plank = new KEVAPlank(btVector3(0,0,0), btQuaternion::getIdentity());
+    physics->addRigidBody(plank->getBody());
+    planks.push_back(plank);
 
     // ---------- Set up our matricies ----------
 
@@ -256,7 +300,7 @@ int main() {
         // ---------- Update section ----------
         
         camera.update(deltaTime);
-        physics.update(deltaTime);
+        physics->update(deltaTime);
         
         // ---------- Draw section ----------
 
@@ -275,6 +319,8 @@ int main() {
         // Update to calculate the delta
         lastTime = currentTime;
     }
+    
+    delete physics;
 
     // Check the final error state
     // NOTE: This MUST be called while we still have a valid rendering context (i.e. before we call glfwTerminate() )

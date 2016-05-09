@@ -22,6 +22,32 @@
 #include "gameObject.hpp"
 
 namespace ComS342 {
+    // For converting beween Bullet and GLM
+    glm::mat4 convertBulletTransformToGLM(btTransform& transform) {
+        float data[16];
+        transform.getOpenGLMatrix(data);
+        return glm::make_mat4(data);
+    }
+    
+    btTransform convertGLMTransformToBullet(glm::mat4 transform) {
+        const float* data = glm::value_ptr(transform);
+        btTransform bulletTransform;
+        bulletTransform.setFromOpenGLMatrix(data);
+        return bulletTransform;
+    }
+    
+    btVector3 convertGLMVectorToBullet(glm::vec3 vector) {
+        return btVector3(vector.x,vector.y,vector.z);
+    }
+    
+    glm::vec3 convertBulletVectorToGLM(btVector3 vector) {
+        return glm::vec3(vector.getX(),vector.getY(),vector.getZ());
+    }
+    
+    glm::quat convertBulletQuaternionToGLM(btQuaternion quaternion) {
+        return glm::quat(quaternion.getW(), quaternion.getX(), quaternion.getY(), quaternion.getZ());
+    }
+    
     GameObject::GameObject(Mesh* mesh, Shader* shader, btScalar mass = 0, float scale = 1, const btVector3& position = btVector3(0,0,0), const btQuaternion& orientation = btQuaternion::getIdentity(), btCollisionShape* shape = nullptr) {
         this->mesh = mesh;
         this->shader = shader;
@@ -52,19 +78,13 @@ namespace ComS342 {
     
     void GameObject::draw(glm::mat4 const & viewMatrix, glm::mat4 const & projectionMatrix) {
         
-        btScalar  btAngle = body->getOrientation().getAngle();
-        btVector3 btAxis  = body->getOrientation().getAxis();
-        btVector3 btPos   = body->getCenterOfMassPosition();
+        // Convert body info into something usable by OpenGL
+        orientation = convertBulletQuaternionToGLM(body->getOrientation());
+        position = convertBulletVectorToGLM(body->getCenterOfMassPosition());
         
-        angle    = (float)btAngle;
-        axis     = glm::vec3(btAxis.getX(), btAxis.getY(), btAxis.getZ());
-        position = glm::vec3(btPos.getX(), btPos.getY(), btPos.getZ());
-        
-        std::cout << position.x << " " << position.y << " " << position.z << std::endl;
-        
-        auto modelMatrix = glm::mat4(1.0);
+        glm::mat4 modelMatrix = glm::mat4(1.0f);
         modelMatrix = glm::translate(modelMatrix, position);
-        modelMatrix = glm::rotate(modelMatrix, angle, axis);
+        modelMatrix = glm::mat4_cast(orientation) * modelMatrix;
         modelMatrix = glm::scale(modelMatrix, glm::vec3(scale));
         
         shader->activate();

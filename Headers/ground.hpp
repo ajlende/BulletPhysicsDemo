@@ -6,19 +6,19 @@
 //
 //
 
-#ifndef keva_hpp
-#define keva_hpp
+#ifndef ground_hpp
+#define ground_hpp
 
 #include <BulletCollision/CollisionShapes/btBoxShape.h>
 
 #include "gameObject.hpp"
 
 namespace ComS342 {
-    class KEVAPlank : public GameObject {
+    class Ground : public GameObject {
     public:
-        KEVAPlank(const btVector3 & position, const btQuaternion & orientation);
-        ~KEVAPlank();
+        Ground(const btVector3 & position, const btQuaternion & orientation);
+        ~Ground();
     };
 }
 
-#endif /* keva_hpp */
+#endif /* ground_hpp */

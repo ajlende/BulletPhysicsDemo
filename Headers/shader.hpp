@@ -8,6 +8,7 @@
 // Standard Headers
 #include <string>
 #include <vector>
+#include <iostream>
 
 // Define Namespace
 namespace ComS342
